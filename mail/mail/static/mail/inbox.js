@@ -6,9 +6,20 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
 
+  // Sending mail using compose form
+  //document.querySelector('form').onsubmit = send_mail;  
+  //document.querySelector('#compose-form').onsubmit = function() {
+  //  send_mail();
+  //  load_mailbox('sent');
+  //}
+
+  document.querySelector('#compose-form').onsubmit = send_mail;
+
   // By default, load the inbox
   load_mailbox('inbox');
+
 });
+
 
 function compose_email() {
 
@@ -20,6 +31,31 @@ function compose_email() {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
+}
+
+function send_mail() {  
+  
+  const form_recipients = document.querySelector('#compose-recipients').value;
+  const form_subject = document.querySelector('#compose-subject').value;
+  const form_body = document.querySelector('#compose-body').value;
+
+  fetch('/emails', {
+    method: 'POST',
+    body: JSON.stringify({
+      recipients: form_recipients,
+      subject: form_subject,
+      body: form_body
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if ("message" in result) {
+        // The email was sent successfully!
+        load_mailbox('sent');
+    }
+
+  return false;
+
 }
 
 function load_mailbox(mailbox) {
