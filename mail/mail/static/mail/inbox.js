@@ -71,15 +71,31 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+    
   if (mailbox === "sent"){
-    fetch('/emails/${mailbox}')
+    fetch(`/emails/${mailbox}`) // `` 1key 옆에 있는 `로 해야 pass variable이 가능
     //fetch('/emails/mailbox') 위의 fetch mailbox 제대로 인식하게 하기..
     .then(response => response.json())
     .then(emails => {
       console.log(emails);
-      document.querySelector('#emails-view').innerHTML = emails;
+      //for (let i = 0; i < emails.length; i++){
+      //  document.querySelector('#emails-view').innerHTML = emails[i].sender;
+      //} // this is work!!!     
+      
+      let mail = "";
+      emails.forEach(function(email){        
+        mail += email.recipients+ " " + email.subject + " " + email. timestamp + "<br>";
+        document.querySelector('#emails-view').innerHTML = mail;
+      });
+      // above document 명령문의 위치를 forEach안에 둘건가 밖에 둘건가 기능은 둘다 되는데, 다시 테스트하기
+      
+  
+        
+        
     });
   }
-}  
+  return false;
+
+} 
 
   
