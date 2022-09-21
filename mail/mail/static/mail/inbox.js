@@ -107,10 +107,28 @@ function load_mailbox(mailbox) {
       onemail.addEventListener('click', function(){
         console.log('This onemail has been clicked!')
         console.log(email.read)
-        view_email(email.id);
+        view_email(email.id, `${mailbox}`);
       });
 
       document.querySelector('#emails-view').append(onemail);
+
+      //if (`${mailbox}` == "inbox"){
+      //  const archive = document.createElement('button');
+      //  archive.innerHTML = 'Archive';
+      //  archive.addEventListener('click', function(){
+      //    console.log(archive)
+      //    fetch(`/emails/${email.id}`,{
+      //      method: 'PUT',
+      //      body: JSON.stringify({
+      //      archived : true
+      //      })
+      //    })
+      //  });
+
+        //document.querySelector('#emails-view').append(archive);
+      //}
+
+
       //document.querySelector('#emails-view').appendChild(element);
     });
     
@@ -122,55 +140,70 @@ function load_mailbox(mailbox) {
 }
 
 
-function view_email(emails_id) {
+function view_email(emails_id, mailbox) {
 
   // Setting ones hided 
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#read-emails-view').style.display = 'block';
+  document.querySelector('#read-emails-view').innerHTML = "";  
 
-  document.querySelector('#read-emails-view').innerHTML = "";
-  //let loggeduser = request.user;
-
+  // Listing an email content
   if (document.querySelector('#read-emails-view').innerHTML === ""){
 
     fetch(`/emails/${emails_id}`)
     .then(response => response.json())
     .then(mail => {
-    console.log(mail);
+      console.log(mail);
 
-    const viewmail = document.createElement('div');
-    let content = "Sender : " + mail.sender + "<br>Recipients :" + mail.recipients 
-                  + "<br>Subject : " + mail.subject + "<br>Timestamp : " + mail.timestamp + "<br>Body : " + mail.body;
-    viewmail.innerHTML = content;
-    console.log(viewmail)
+      // Presenting mail's header
+      const viewmail = document.createElement('div');
+      let content = "Sender : " + mail.sender + "<br>Recipients :" + mail.recipients 
+                    + "<br>Subject : " + mail.subject + "<br>Timestamp : " + mail.timestamp; //+ "<hr>Body : " + mail.body;
+      viewmail.innerHTML = content;
 
-    document.querySelector('#read-emails-view').append(viewmail);
+      document.querySelector('#read-emails-view').append(viewmail);
 
-    // 수령인과 로그인유저가 같으면 이라는 조건문 달기    
-    //console.log(request.user);
-    ///console.log(mail.recipients);
+      // Presenting archive button
+      if (mailbox === 'inbox'){
+        const archive = document.createElement('button');
+        archive.innerHTML = 'Archive';
+        archive.addEventListener('click', function(){
+          console.log(archive)
+          fetch(`/emails/${emails_id}`,{
+            method: 'PUT',
+            body: JSON.stringify({
+            archived : true
+            })
+          })
+          load_mailbox('inbox');
+        });
 
-    fetch(`/emails/${emails_id}`,{
-      method: 'PUT',
-      body: JSON.stringify({
-      read : true
+        document.querySelector('#read-emails-view').append(archive);
+      }
+
+      // Presenting mail's body
+      const viewbody = document.createElement('div');
+      let body = "<hr>Body : " + mail.body;
+      viewbody.innerHTML = body;
+      console.log(viewmail)
+
+      document.querySelector('#read-emails-view').append(viewbody);
+
+      // Updating mail's read value to true
+      fetch(`/emails/${emails_id}`,{
+        method: 'PUT',
+        body: JSON.stringify({
+        read : true
+        })
       })
-    })
-    .then(response => response)
-    .then(result => {
-      console.log(result);
-    });
-
-    
-
+      .then(response => response)
+      .then(result => {
+        console.log(result);
+      });
     });
 
   }
-
-
-
-  
   return false;
 }
   
