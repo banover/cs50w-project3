@@ -67,6 +67,7 @@ function send_mail() {
   });
    
   // Direct to 'sent' mailbox
+  // localstroage clear 생각해보기 이거 안하니까 'sent' mailbox로 가도 보낸 편지가 바로 안뜸 새로고침한번해줘야함
   load_mailbox('sent');
   return false; 
 
@@ -83,28 +84,36 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
     
   // Sending request and recieved email datas from api
-  fetch(`/emails/${mailbox}`) // `` 1key 옆에 있는 `로 해야 pass variable이 가능
-  //fetch('/emails/mailbox') 위의 fetch mailbox 제대로 인식하게 하기..
+  fetch(`/emails/${mailbox}`) // `` 1key 옆에 있는 `로 해야 pass variable이 가능  
   .then(response => response.json())
   .then(emails => {
-
     console.log(emails);        
     
-    // Making new html lines for mail view
-    let mail = "";
+    // Making new html lines for mail view    
     emails.forEach(function(email){
 
-      if (email.read === "True"){
-        mail += "<button class=\"onemail\" style=\"background-color: gray;\" data-id=\"" + email.id + "\">" + email.recipients + " " + email.subject + " " + email. timestamp + "</button><br>";
-        //mail += "<div class=\"onemail\" data-id=\"" + email.id + "\" style=\"background-color: gray;\"><a href=\"\">" + email.recipients+ " " + email.subject + " " + email. timestamp + "</a></div><br>";
-      }
-      else{
-        mail += "<button class=\"onemail\" data-id=\"" + email.id + "\">" + email.recipients + " " + email.subject + " " + email. timestamp + "</button><br>";
-      }
+      //let mail = "";      
+      //mail += email.recipients + " " + email.subject + " " + email. timestamp + "<br>";
+      let mail = email.recipients + " " + email.subject + " " + email. timestamp + "<br>";
+      const onemail = document.createElement('div');
+      onemail.innerHTML = mail;
 
-      document.querySelector('#emails-view').innerHTML = mail;
+      if (email.read === true){
+        onemail.style.cssText = 'border-style: solid;border-width: 1px;background-color: gray;';
+      }else {
+        onemail.style.cssText = 'border-style: solid;border-width: 1px;';
+      }
+      
+      onemail.addEventListener('click', function(){
+        console.log('This onemail has been clicked!')
+        console.log(email.read)
+        view_email(email.id);
+      });
+
+      document.querySelector('#emails-view').append(onemail);
+      //document.querySelector('#emails-view').appendChild(element);
     });
-    // above document 명령문의 위치를 forEach안에 둘건가 밖에 둘건가 기능은 둘다 되는데, 다시 테스트하기
+    
     // hint에 있는 code참고해서 console.log(emails)밑에서 부터 다시 작성하기, 애초에 버튼만들 때 eventlistener 달아놔야했음, contentload후에 적용은 안됨(이유 궁금)
   });
 
@@ -114,11 +123,53 @@ function load_mailbox(mailbox) {
 
 
 function view_email(emails_id) {
+
+  // Setting ones hided 
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#read-emails-view').style.display = 'block';
 
-  document.querySelector('#read-emails-view').innerHTML = `<p>Fuck!, ${emails_id}</p>`;
+  document.querySelector('#read-emails-view').innerHTML = "";
+  //let loggeduser = request.user;
+
+  if (document.querySelector('#read-emails-view').innerHTML === ""){
+
+    fetch(`/emails/${emails_id}`)
+    .then(response => response.json())
+    .then(mail => {
+    console.log(mail);
+
+    const viewmail = document.createElement('div');
+    let content = "Sender : " + mail.sender + "<br>Recipients :" + mail.recipients 
+                  + "<br>Subject : " + mail.subject + "<br>Timestamp : " + mail.timestamp + "<br>Body : " + mail.body;
+    viewmail.innerHTML = content;
+    console.log(viewmail)
+
+    document.querySelector('#read-emails-view').append(viewmail);
+
+    // 수령인과 로그인유저가 같으면 이라는 조건문 달기    
+    //console.log(request.user);
+    ///console.log(mail.recipients);
+
+    fetch(`/emails/${emails_id}`,{
+      method: 'PUT',
+      body: JSON.stringify({
+      read : true
+      })
+    })
+    .then(response => response)
+    .then(result => {
+      console.log(result);
+    });
+
+    
+
+    });
+
+  }
+
+
+
   
   return false;
 }
