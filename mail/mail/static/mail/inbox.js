@@ -158,7 +158,7 @@ function view_email(emails_id, mailbox) {
 
       // Presenting mail's header
       const viewmail = document.createElement('div');
-      let content = "Sender : " + mail.sender + "<br>Recipients :" + mail.recipients 
+      let content = "From : " + mail.sender + "<br>To : " + mail.recipients 
                     + "<br>Subject : " + mail.subject + "<br>Timestamp : " + mail.timestamp; //+ "<hr>Body : " + mail.body;
       viewmail.innerHTML = content;
 
@@ -170,17 +170,49 @@ function view_email(emails_id, mailbox) {
         archive.innerHTML = 'Archive';
         archive.addEventListener('click', function(){
           console.log(archive)
+
           fetch(`/emails/${emails_id}`,{
             method: 'PUT',
             body: JSON.stringify({
             archived : true
             })
+          })          
+          load_mailbox('inbox');
+        });
+        document.querySelector('#read-emails-view').append(archive);
+
+      }
+
+      // Presenting reply button 
+      if (mailbox === 'inbox' || mailbox === 'archive'){
+        const reply = document.createElement('button');
+        reply.innerHTML = 'reply';
+        reply.addEventListener('click', function(){
+          console.log(reply)          
+          reply_compose_email(mail);
+        });
+        document.querySelector('#read-emails-view').append(reply);
+      }
+
+      // Presenting unarchive button
+      if (mailbox === 'archive'){
+        const unarchive = document.createElement('button');
+        unarchive.innerHTML = 'unarchive';
+        unarchive.addEventListener('click', function(){
+          console.log(unarchive)
+
+          fetch(`/emails/${emails_id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+            archived : false
+            })
           })
+          
           load_mailbox('inbox');
         });
 
-        document.querySelector('#read-emails-view').append(archive);
-      }
+        document.querySelector('#read-emails-view').append(unarchive);
+      }      
 
       // Presenting mail's body
       const viewbody = document.createElement('div');
@@ -206,4 +238,16 @@ function view_email(emails_id, mailbox) {
   }
   return false;
 }
-  
+
+function reply_compose_email(mail) {
+
+  // Show compose view and hide other views
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#read-emails-view').style.display = 'none';
+
+  // Clear out composition fields
+  document.querySelector('#compose-recipients').value = `${mail.sender}`;
+  document.querySelector('#compose-subject').value = "Re: " + `${mail.subject}`;
+  document.querySelector('#compose-body').value = `${mail.timestamp}`+" "+`${mail.sender}`+ " wrote: "+`${mail.body}`;
+}
